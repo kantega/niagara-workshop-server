@@ -7,7 +7,7 @@ import fj.data.List;
 
 public interface Progress {
 
-    <T> T fold(F<Emit, T> onEmit, F<Await, T> onAwait, F<End, T> onDone);
+    <T> T fold(F<Emit, T> onEmit, F<Receive, T> onAwait, F<End, T> onDone);
 
 
     Progress then(Progress next);
@@ -20,7 +20,8 @@ public interface Progress {
         );
     }
 
-    default P2<List<ProgressMsg>, Progress> advance(String msg) {
+
+    default P2<List<ProgressOutput>, Progress> advance(String msg) {
         return fold(
           emit -> emit.next.advance(msg).map1(list -> list.cons(emit.messages)),
           await -> await.apply(msg).untilNextAwait(),
@@ -28,7 +29,7 @@ public interface Progress {
         );
     }
 
-    default P2<List<ProgressMsg>, Progress> untilNextAwait() {
+    default P2<List<ProgressOutput>, Progress> untilNextAwait() {
         return fold(
           emit -> emit.next.untilNextAwait().map1(list -> list.cons(emit.messages)),
           await -> P.p(List.nil(), await),
@@ -40,26 +41,42 @@ public interface Progress {
         return count > 1 ?
           fold(
             emit -> new Emit(emit.messages, repeat(count - 1)),
-            await -> new Await(msg -> await.handler.f(msg).repeat(count - 1)),
+            await -> new Receive(msg -> await.handler.f(msg).repeat(count - 1)),
             end -> end
           ) :
           this;
     }
 
     static Progress emit(String msg) {
-        return emit(ProgressMsg.msg(msg));
+        return emit(ProgressOutput.msg(msg));
     }
 
-    static Progress emit(ProgressMsg msg) {
+    static Progress emit(ProgressOutput msg) {
         return new Emit(msg, done());
     }
 
     static Progress await(F<String, Progress> func) {
-        return new Await(func);
+        return new Receive(func);
     }
 
-    static Progress expect(F<String, Boolean> expect, F<String, Progress> onSuccess) {
-        return await(msg -> expect.f(msg) ? onSuccess.f(msg) : expect(expect, onSuccess));
+    static Progress expect(
+      F<String, Boolean> expect,
+      F<String, Progress> onSuccess) {
+        return expect(expect, msg -> expect(expect, onSuccess), onSuccess);
+    }
+
+    static Progress expectWithFailMsg(
+      F<String, Boolean> expect,
+      F<String, String> failmsg,
+      F<String, Progress> onSuccess) {
+        return expect(expect, msg -> emit(failmsg.f(msg)).then(expectWithFailMsg(expect, failmsg, onSuccess)), onSuccess);
+    }
+
+    static Progress expect(
+      F<String, Boolean> expect,
+      F<String, Progress> onFail,
+      F<String, Progress> onSuccess) {
+        return await(msg -> expect.f(msg) ? onSuccess.f(msg) : onFail.f(msg));
     }
 
     static Progress done() {
@@ -72,16 +89,16 @@ public interface Progress {
 
 
     class Emit implements Progress {
-        public final ProgressMsg messages;
-        public final Progress    next;
+        public final ProgressOutput messages;
+        public final Progress       next;
 
-        public Emit(ProgressMsg messages, Progress next) {
+        public Emit(ProgressOutput messages, Progress next) {
             this.messages = messages;
             this.next = next;
         }
 
         @Override
-        public <T> T fold(F<Emit, T> onEmit, F<Await, T> onAwait, F<End, T> onDone) {
+        public <T> T fold(F<Emit, T> onEmit, F<Receive, T> onAwait, F<End, T> onDone) {
             return onEmit.f(this);
         }
 
@@ -91,11 +108,11 @@ public interface Progress {
         }
     }
 
-    class Await implements Progress {
+    class Receive implements Progress {
 
         public final F<String, Progress> handler;
 
-        public Await(F<String, Progress> handler) {
+        public Receive(F<String, Progress> handler) {
             this.handler = handler;
         }
 
@@ -104,17 +121,18 @@ public interface Progress {
         }
 
         @Override
-        public <T> T fold(F<Emit, T> onEmit, F<Await, T> onAwait, F<End, T> onDone) {
+        public <T> T fold(F<Emit, T> onEmit, F<Receive, T> onAwait, F<End, T> onDone) {
             return onAwait.f(this);
         }
 
         @Override
         public Progress then(Progress next) {
-            return new Await(msg -> handler.f(msg).then(next));
+            return new Receive(msg -> handler.f(msg).then(next));
         }
     }
 
     class End implements Progress {
+
         public final String reason;
 
         public End(String reason) {
@@ -122,17 +140,13 @@ public interface Progress {
         }
 
         @Override
-        public <T> T fold(F<Emit, T> onEmit, F<Await, T> onAwait, F<End, T> onDone) {
+        public <T> T fold(F<Emit, T> onEmit, F<Receive, T> onAwait, F<End, T> onDone) {
             return onDone.f(this);
         }
 
         @Override
         public Progress then(Progress next) {
-            return fold(
-              emit -> emit,
-              await -> await,
-              end -> end
-            );
+            return next;
         }
     }
 

@@ -20,7 +20,7 @@ public class Route {
     private List<String> paramsNames = new ArrayList<>();
     private final Pattern routePattern;
 
-    public Route(String path) {
+    private Route(String path) {
         this.path = path;
         String regex = path.replaceAll(namedParam, "/:?([\\\\w\\\\.\\\\-]+)").replaceAll(splatParam, "/\\\\*?(.+)");
         routePattern = Pattern.compile(regex);
@@ -31,6 +31,10 @@ public class Route {
                 paramsNames.add(paramMatcher.group(i));
             }
         }
+    }
+
+    public static Route route(String path){
+        return new Route(path);
     }
 
     public boolean matches(String test) {
