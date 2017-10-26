@@ -33,7 +33,7 @@ public class ClientSubscription implements Sink<ConsumerRecord> {
     @Override
     public Task<Unit> consume(ConsumerRecord consumerRecord) {
         return
-          spec.f(consumerRecord.topic) ?
+          spec.f(consumerRecord.topic.name) ?
             Task.tryRunnableTask(() -> webSocket.write(Buffer.buffer(JsonWriter.write(Client.consumerRecordCodec.encode(consumerRecord))))) :
             Task.noOp;
     }

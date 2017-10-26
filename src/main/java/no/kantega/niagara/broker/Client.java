@@ -15,6 +15,8 @@ import org.kantega.niagara.exchange.Topic;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static fj.P.p;
 import static fj.Unit.*;
@@ -26,57 +28,73 @@ import static org.kantega.niagara.Task.*;
 
 public class Client {
 
-    static final HttpClient httpClient =
-      Vertx.vertx().createHttpClient();
+    static private Vertx vertx = Vertx.vertx();
 
+    static final HttpClient httpClient =
+      vertx.createHttpClient();
+
+    static ScheduledExecutorService ses =
+      Executors.newSingleThreadScheduledExecutor();
 
     public static WS websocket(String server, int port, SubscribeTo... subscribeTos) {
+
         String path =
           "/ws" + toQueryString(true, List.arrayList(subscribeTos));
 
         return app -> async(cb -> {
             Topic<ConsumerRecord>          topic   = new Topic<>();
             CompletableFuture<Source.Stop> stopper = new CompletableFuture<>();
-            httpClient.websocket(port, server, path, ws -> {
-                ws.handler(buffer ->
-                  parse(buffer.toString())
-                    .decode(consumerRecordCodec.decoder)
-                    .fold(
-                      err -> fail(new RuntimeException(err)).toUnit(),
-                      topic::publish)
-                    .onFail(t -> println(t.getMessage()))
-                    .execute());
 
 
-                ws.closeHandler(u ->
-                  stopper.complete(Source.stop));
+                httpClient.websocket(port, server, path, ws -> {
+                    ws.handler(buffer ->
+                      parse(buffer.toString())
+                        .decode(consumerRecordCodec.decoder)
+                        .fold(
+                          err -> fail(new RuntimeException(err)).toUnit(),
+                          topic::publish)
+                        .onFail(t -> println(t.getMessage()))
+                        .execute());
 
-                println("Opened connection to " + server + ":" + port + path)
-                  .andThen(
-                    app
-                      .apply(topic.subscribe())
-                      .apply(out -> runnableTask(() -> ws.write(buffer(write(producerRecordCodec.encode(out))))))
-                      .closeOn(Eventually.wrap(stopper))
-                      .onClose(close(ws))
-                      .toTask())
-                  .flatMap(closed -> println(closed.toString()))
-                  .flatMap(u -> runnableTask(() -> cb.f(Attempt.value(unit()))))
-                  .execute();
-            });
+
+                    ws.closeHandler(u ->
+                      stopper.complete(Source.stop));
+
+
+                    println("Opened connection to " + server + ":" + port + path)
+                      .andThen(
+                        app
+                          .apply(topic.subscribe())
+                          .apply(out -> runnableTask(() -> ws.write(buffer(write(producerRecordCodec.encode(out))))))
+                          .closeOn(Eventually.wrap(stopper))
+                          .onClose(close(ws))
+                          .toTask())
+                      .flatMap(closed -> println("Closed connection to " + server + ":" + port + path))
+                      .flatMap(u -> runnableTask(() -> cb.f(Attempt.value(unit()))))
+                      .execute();
+                },t->
+                   cb.f(Attempt.fail(t)));
+
         });
     }
 
 
     public static Task<Unit> close(WebSocket ws) {
-        return runnableTask(ws::close).andThen(println("Closed " + ws));
+        return runnableTask(()->{
+            try {
+                ws.close();
+            }catch (Exception e){
+                System.out.println("Websocket is already closed");
+            }
+        }).andThen(println("Closed " + ws));
     }
 
     public static void run(WS ws, Stream<ConsumerRecord, ProducerRecord> app) {
-        ws.open(app).execute().await(Duration.ofSeconds(10));
+        ws.open(app).andThen(Util.println("Client closed, trying to reconnect")).andThen(Task.runnableTask(()->run(ws,app)).delay(Duration.ofSeconds(5),ses)).execute();
     }
 
     public static void run(WS ws, Source<ProducerRecord> output) {
-        ws.open(input -> output).execute().await(Duration.ofSeconds(10));
+        Client.run(ws,input -> output);
     }
 
     public interface WS {
@@ -90,12 +108,11 @@ public class Client {
         default void run(Source<ProducerRecord> output) {
             Client.run(this, output);
         }
-
     }
 
     public static final JsonCodec<ProducerRecord> producerRecordCodec =
       JsonCodecs.objectCodec(
-        JsonCodecs.field("topic", JsonCodecs.stringCodec),
+        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName->topicName.name,TopicName::new)),
         JsonCodecs.field("msg", JsonCodecs.stringCodec),
         record -> p(record.topic, record.msg),
         ProducerRecord::new
@@ -105,7 +122,7 @@ public class Client {
       JsonCodecs.objectCodec(
         JsonCodecs.field("id", JsonCodecs.stringCodec),
         JsonCodecs.field("offset", JsonCodecs.longCodec),
-        JsonCodecs.field("topic", JsonCodecs.stringCodec),
+        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName->topicName.name,TopicName::new)),
         JsonCodecs.field("msg", JsonCodecs.stringCodec),
         record -> p(record.id, record.offset, record.topic, record.msg),
         ConsumerRecord::new

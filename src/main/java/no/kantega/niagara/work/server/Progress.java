@@ -21,19 +21,19 @@ public interface Progress {
     }
 
 
-    default P2<List<ProgressOutput>, Progress> advance(String msg) {
+    default P2< Progress,List<ProgressOutput>> advance(ProgressInput msg) {
         return fold(
-          emit -> emit.next.advance(msg).map1(list -> list.cons(emit.messages)),
-          await -> await.apply(msg).untilNextAwait(),
-          end -> P.p(List.nil(), end)
+          emit -> emit.next.advance(msg).map2(list -> list.cons(emit.messages)),
+          await -> await.apply(msg).begin(),
+          end -> P.p(end,List.nil())
         );
     }
 
-    default P2<List<ProgressOutput>, Progress> untilNextAwait() {
+    default P2< Progress,List<ProgressOutput>> begin() {
         return fold(
-          emit -> emit.next.untilNextAwait().map1(list -> list.cons(emit.messages)),
-          await -> P.p(List.nil(), await),
-          end -> P.p(List.nil(), end)
+          emit -> emit.next.begin().map2(list -> list.cons(emit.messages)),
+          await -> P.p(await,List.nil()),
+          end -> P.p(end,List.nil())
         );
     }
 
@@ -55,27 +55,27 @@ public interface Progress {
         return new Emit(msg, done());
     }
 
-    static Progress await(F<String, Progress> func) {
+    static Progress await(F<ProgressInput, Progress> func) {
         return new Receive(func);
     }
 
     static Progress expect(
-      F<String, Boolean> expect,
-      F<String, Progress> onSuccess) {
+      F<ProgressInput, Boolean> expect,
+      F<ProgressInput, Progress> onSuccess) {
         return expect(expect, msg -> expect(expect, onSuccess), onSuccess);
     }
 
     static Progress expectWithFailMsg(
-      F<String, Boolean> expect,
-      F<String, String> failmsg,
-      F<String, Progress> onSuccess) {
+      F<ProgressInput, Boolean> expect,
+      F<ProgressInput, String> failmsg,
+      F<ProgressInput, Progress> onSuccess) {
         return expect(expect, msg -> emit(failmsg.f(msg)).then(expectWithFailMsg(expect, failmsg, onSuccess)), onSuccess);
     }
 
     static Progress expect(
-      F<String, Boolean> expect,
-      F<String, Progress> onFail,
-      F<String, Progress> onSuccess) {
+      F<ProgressInput, Boolean> expect,
+      F<ProgressInput, Progress> onFail,
+      F<ProgressInput, Progress> onSuccess) {
         return await(msg -> expect.f(msg) ? onSuccess.f(msg) : onFail.f(msg));
     }
 
@@ -110,13 +110,13 @@ public interface Progress {
 
     class Receive implements Progress {
 
-        public final F<String, Progress> handler;
+        public final F<ProgressInput, Progress> handler;
 
-        public Receive(F<String, Progress> handler) {
+        public Receive(F<ProgressInput, Progress> handler) {
             this.handler = handler;
         }
 
-        Progress apply(String incoming) {
+        Progress apply(ProgressInput incoming) {
             return handler.f(incoming);
         }
 

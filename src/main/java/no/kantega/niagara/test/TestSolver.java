@@ -7,35 +7,21 @@ import org.kantega.niagara.Sources;
 import java.time.Duration;
 import java.util.Arrays;
 
+import static no.kantega.niagara.broker.ProducerRecord.message;
+import static no.kantega.niagara.broker.ProducerRecord.toMessage;
+import static no.kantega.niagara.broker.TopicName.solution;
+
 public class TestSolver {
 
     public static Client.WS ws =
-      Client.websocket(8080, "localhost", "/solution/balla");
+      Client.websocket("localhost", 8080);
 
-    @Test
-    public void task1() {
-        Client.post(8080, "localhost", "/solution/balla", "att")
-          .executeAndAwait(Duration.ofSeconds(1));
-    }
-
-    @Test
-    public void task2() {
-        Client.post(8080, "localhost", "/solution/balla", "att")
-          .executeAndAwait(Duration.ofSeconds(1));
-    }
-
-
-    @Test
-    public void task3() {
-        Client.post(8080, "localhost", "/solution/balla", "atle")
-          .executeAndAwait(Duration.ofSeconds(1));
-    }
 
 
     @Test
     public void task4() {
         ws.run(
-          Sources.value("atle")
+          Sources.value(message(solution("/solution"), "atle"))
         );
     }
 
@@ -45,6 +31,7 @@ public class TestSolver {
           run(
             Sources.value("atle")
               .map(String::toUpperCase)
+              .map(toMessage(solution("/solution")))
           );
     }
 
@@ -54,6 +41,7 @@ public class TestSolver {
           Sources.value("atle")
             .map(String::toUpperCase)
             .flatten(n -> Arrays.asList(n.split("")))
+            .map(toMessage(solution("/solution")))
         );
     }
 
@@ -63,6 +51,7 @@ public class TestSolver {
           Sources.value("atle")
             .append(() -> Sources.value("atle"))
             .flatten(n -> Arrays.asList(n.split("")))
+            .map(toMessage(solution("/solution")))
         );
     }
 

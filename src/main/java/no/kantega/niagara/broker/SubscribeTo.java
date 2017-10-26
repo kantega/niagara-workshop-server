@@ -9,4 +9,13 @@ public class SubscribeTo {
         this.replay = replay;
         this.topic = topic;
     }
+
+
+    public static SubscribeTo subscribeTo(String topic){
+        return new SubscribeTo(false,topic);
+    }
+
+    public static SubscribeTo replayAndSubscribeTo(String topic){
+        return new SubscribeTo(true,topic);
+    }
 }

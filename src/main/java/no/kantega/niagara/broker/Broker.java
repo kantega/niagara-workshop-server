@@ -5,6 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import no.kantega.niagara.work.Util;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.kantega.kson.JsonResult;
@@ -49,11 +50,16 @@ public class Broker {
                 server
                   .websocketHandler(serverWebSocket -> {
 
+                      System.out.println("Connection path: "+serverWebSocket.path()+", query: "+serverWebSocket.query());
+
                       String path =
-                        serverWebSocket.path();
+                        serverWebSocket.path() == null ? "":serverWebSocket.path();
+
+                      String query =
+                        serverWebSocket.query() == null ? "":serverWebSocket.query();
 
                       List<NameValuePair> nameValuePairs =
-                        iterableList(URLEncodedUtils.parse(serverWebSocket.query(), Charset.forName("UTF-8")));
+                        iterableList(URLEncodedUtils.parse(query, Charset.forName("UTF-8")));
 
                       boolean firehose =
                         nameValuePairs
@@ -69,7 +75,7 @@ public class Broker {
                           .map(NameValuePair::getValue);
 
 
-                      if (path.startsWith("/broker")) {
+                      if (path.startsWith("/ws")) {
 
                           ClientSubscription sub =
                             firehose ?
@@ -82,6 +88,7 @@ public class Broker {
                           (replay ? queue.subscribe(0) : queue.subscribeToLast())
                             .to(sub)
                             .closeOn(Eventually.wrap(closer))
+                            .onClose(Util.println("Websocket closed "+serverWebSocket.query()))
                             .toTask()
                             .using(executor)
                             .execute();
@@ -97,6 +104,7 @@ public class Broker {
 
                           serverWebSocket.closeHandler(v -> {
                               closer.complete(Source.stop);
+
                           });
                       } else
                           serverWebSocket.reject();

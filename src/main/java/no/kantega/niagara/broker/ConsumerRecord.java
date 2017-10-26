@@ -13,4 +13,15 @@ public class ConsumerRecord {
         this.offset = offset;
         this.msg = msg;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ConsumerRecord{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", topic=").append(topic);
+        sb.append(", offset=").append(offset);
+        sb.append(", msg='").append(msg).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

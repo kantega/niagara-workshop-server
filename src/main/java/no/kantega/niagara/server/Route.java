@@ -1,6 +1,8 @@
 package no.kantega.niagara.server;
 
+import fj.F;
 import fj.Ord;
+import fj.data.Option;
 import fj.data.TreeMap;
 
 import java.util.ArrayList;
@@ -33,12 +35,22 @@ public class Route {
         }
     }
 
-    public static Route route(String path){
+    public static Route route(String path) {
         return new Route(path);
     }
 
     public boolean matches(String test) {
         return routePattern.matcher(test).matches();
+    }
+
+    public <A> Option<A> onMatchParam(String test, F<String, A> f) {
+        if (matches(test)) {
+            TreeMap<String, String> params = getParams(test);
+            if (params.size() > 0) {
+                return Option.some(f.f(params.values().head()));
+            }
+        }
+        return Option.none();
     }
 
     public TreeMap<String, String> getParams(String test) {
@@ -53,7 +65,7 @@ public class Route {
                 n++;
             }
         }
-        return TreeMap.fromMutableMap(Ord.stringOrd,params);
+        return TreeMap.fromMutableMap(Ord.stringOrd, params);
     }
 
     @Override
