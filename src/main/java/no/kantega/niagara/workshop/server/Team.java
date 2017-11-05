@@ -1,4 +1,4 @@
-package no.kantega.niagara.work.server;
+package no.kantega.niagara.workshop.server;
 
 import fj.P2;
 import fj.data.List;
@@ -19,7 +19,7 @@ public class Team {
 
     public static P2<Team, List<ProgressOutput>> newTeam(SessionId id, String name) {
         P2<Progress, List<ProgressOutput>> begin =
-          WorkshopTasks.tasks.begin();
+          WorkshopTasks.tasks.f(id.value).begin();
 
         Team t =
           new Team(id, name, begin._1());
@@ -32,8 +32,8 @@ public class Team {
           progress.advance(input).map1(this::withProgress);
     }
 
-    public Team withProgress(Progress progress){
-        return new Team(sessionId,name,progress);
+    public Team withProgress(Progress progress) {
+        return new Team(sessionId, name, progress);
     }
 
 

@@ -5,8 +5,8 @@ import fj.Ord;
 import fj.Unit;
 import fj.data.List;
 import fj.data.Set;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ServerWebSocket;
+import no.kantega.niagara.workshop.Client;
 import org.kantega.kson.parser.JsonWriter;
 import org.kantega.niagara.Sink;
 import org.kantega.niagara.Task;
@@ -21,9 +21,11 @@ public class ClientSubscription implements Sink<ConsumerRecord> {
         this.webSocket = webSocket;
     }
 
-    public static ClientSubscription subscription(ServerWebSocket webSocket, List<String> topics) {
-        Set<String> set = Set.iterableSet(Ord.stringOrd, topics);
-        return new ClientSubscription(set::member, webSocket);
+    public static ClientSubscription subscription(ServerWebSocket webSocket, List<String> prefixes) {
+        return new ClientSubscription(
+          incTopic->
+            prefixes.exists(incTopic::startsWith),
+          webSocket);
     }
 
     public static ClientSubscription firehose(ServerWebSocket webSocket) {
@@ -34,7 +36,11 @@ public class ClientSubscription implements Sink<ConsumerRecord> {
     public Task<Unit> consume(ConsumerRecord consumerRecord) {
         return
           spec.f(consumerRecord.topic.name) ?
-            Task.tryRunnableTask(() -> webSocket.write(Buffer.buffer(JsonWriter.write(Client.consumerRecordCodec.encode(consumerRecord))))) :
+            Task.tryRunnableTask(() -> {
+            String msg = JsonWriter.write(Client.consumerRecordCodec.encode(consumerRecord));
+            System.out.println("Sending raw "+msg);
+            webSocket.writeTextMessage(msg);
+            }) :
             Task.noOp;
     }
 }

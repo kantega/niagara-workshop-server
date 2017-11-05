@@ -1,0 +1,16 @@
+body {
+    background-color: white;
+    color: #222;
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 22px;
+}
+
+.task{
+    color: darkolivegreen;
+}
+.feedback {
+    color:red;
+}
+.team {
+    font-style: italic;
+}

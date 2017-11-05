@@ -19,4 +19,12 @@ public class ProducerRecord {
     public static F<String, ProducerRecord> toMessage(TopicName topicName) {
         return (msg) -> message(topicName, msg);
     }
+
+    @Override
+    public String toString() {
+        return "ProducerRecord{" +
+          "topic=" + topic +
+          ", msg='" + msg + '\'' +
+          '}';
+    }
 }

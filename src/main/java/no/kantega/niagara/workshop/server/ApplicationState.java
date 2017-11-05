@@ -1,4 +1,4 @@
-package no.kantega.niagara.work.server;
+package no.kantega.niagara.workshop.server;
 
 import fj.P2;
 import fj.data.List;
@@ -10,7 +10,7 @@ import no.kantega.niagara.broker.TopicName;
 import no.kantega.niagara.server.Route;
 import org.kantega.niagara.Mealy;
 
-import static no.kantega.niagara.work.server.SessionId.sessionIdOrd;
+import static no.kantega.niagara.workshop.server.SessionId.sessionIdOrd;
 
 public class ApplicationState implements Mealy<ConsumerRecord, List<ProducerRecord>> {
 
@@ -51,7 +51,8 @@ public class ApplicationState implements Mealy<ConsumerRecord, List<ProducerReco
 
                 return Mealy.transition(addTeam(firstProgress._1()), output);
             })
-            .orElse(() -> wsSolutionRoute.onMatchParam(topicName.name, (id) -> {
+            .orElse(
+              () -> wsSolutionRoute.onMatchParam(topicName.name, (id) -> {
                   SessionId sessionId =
                     new SessionId(id);
 
@@ -64,7 +65,9 @@ public class ApplicationState implements Mealy<ConsumerRecord, List<ProducerReco
                         team.apply(new ProgressInput(producerRecord.msg));
 
                       List<ProducerRecord> output =
-                        next._2().map(msg -> new ProducerRecord(TopicName.progressTopic(sessionId), msg.message));
+                        next._2()
+                          .map(msg -> new ProducerRecord(TopicName.progressTopic(sessionId), msg.message))
+                          .cons(new ProducerRecord(TopicName.progressTopic(sessionId), "team:" + producerRecord.msg));
 
                       return Mealy.transition(addTeam(next._1()), output);
 

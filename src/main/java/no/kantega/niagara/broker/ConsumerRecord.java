@@ -18,7 +18,7 @@ public class ConsumerRecord {
     public String toString() {
         final StringBuilder sb = new StringBuilder("ConsumerRecord{");
         sb.append("id='").append(id).append('\'');
-        sb.append(", topic=").append(topic);
+        sb.append(", topic=").append(topic.name);
         sb.append(", offset=").append(offset);
         sb.append(", msg='").append(msg).append('\'');
         sb.append('}');

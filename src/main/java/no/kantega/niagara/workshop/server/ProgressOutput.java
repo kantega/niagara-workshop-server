@@ -1,4 +1,4 @@
-package no.kantega.niagara.work.server;
+package no.kantega.niagara.workshop.server;
 
 public class ProgressOutput {
 

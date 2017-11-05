@@ -1,15 +1,15 @@
-package no.kantega.niagara.broker;
+package no.kantega.niagara.workshop;
 
 import fj.Unit;
 import fj.data.List;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.WebSocket;
-import no.kantega.niagara.work.Util;
+import no.kantega.niagara.broker.ConsumerRecord;
+import no.kantega.niagara.broker.ProducerRecord;
+import no.kantega.niagara.broker.TopicName;
 import org.kantega.kson.codec.JsonCodec;
 import org.kantega.kson.codec.JsonCodecs;
-import org.kantega.kson.parser.JsonWriter;
 import org.kantega.niagara.*;
 import org.kantega.niagara.exchange.Topic;
 
@@ -20,8 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static fj.P.p;
 import static fj.Unit.*;
-import static io.vertx.core.buffer.Buffer.*;
-import static no.kantega.niagara.work.Util.*;
+import static no.kantega.niagara.workshop.Util.*;
 import static org.kantega.kson.parser.JsonParser.parse;
 import static org.kantega.kson.parser.JsonWriter.*;
 import static org.kantega.niagara.Task.*;
@@ -46,63 +45,69 @@ public class Client {
             CompletableFuture<Source.Stop> stopper = new CompletableFuture<>();
 
 
-                httpClient.websocket(port, server, path, ws -> {
-                    ws.handler(buffer ->
-                      parse(buffer.toString())
-                        .decode(consumerRecordCodec.decoder)
-                        .fold(
-                          err -> fail(new RuntimeException(err)).toUnit(),
-                          topic::publish)
-                        .onFail(t -> println(t.getMessage()))
-                        .execute());
+            httpClient.websocket(port, server, path, ws -> {
+                ws.handler(buffer ->
+                  parse(buffer.toString())
+                    .decode(consumerRecordCodec.decoder)
+                    .fold(
+                      err -> fail(new RuntimeException(err)).toUnit(),
+                      topic::publish)
+                    .onFail(t -> println(t.getMessage()))
+                    .execute());
 
 
-                    ws.closeHandler(u ->
-                      stopper.complete(Source.stop));
+                ws.closeHandler(u ->
+                  stopper.complete(Source.stop));
 
 
-                    println("Opened connection to " + server + ":" + port + path)
-                      .andThen(
-                        app
-                          .apply(topic.subscribe())
-                          .apply(out -> runnableTask(() -> ws.write(buffer(write(producerRecordCodec.encode(out))))))
-                          .closeOn(Eventually.wrap(stopper))
-                          .onClose(close(ws))
-                          .toTask())
-                      .flatMap(closed -> println("Closed connection to " + server + ":" + port + path))
-                      .flatMap(u -> runnableTask(() -> cb.f(Attempt.value(unit()))))
-                      .execute();
-                },t->
-                   cb.f(Attempt.fail(t)));
+                println("Opened connection to " + server + ":" + port + path)
+                  .andThen(
+                    app
+                      .apply(topic.subscribe())
+                      .apply(out->Util.println("Sending "+out.topic.name+":"+out.msg).thenJust(out))
+                      .apply(out -> runnableTask(() -> ws.writeTextMessage(write(producerRecordCodec.encode(out)))))
+                      .closeOn(Eventually.wrap(stopper))
+                      .onClose(close(ws))
+                      .toTask())
+                  .bind(closed -> println("Closed connection to " + server + ":" + port + path))
+                  .bind(u -> runnableTask(() -> cb.f(Attempt.value(unit()))))
+                  .execute();
+            }, t ->
+              cb.f(Attempt.fail(t)));
 
         });
     }
 
 
     public static Task<Unit> close(WebSocket ws) {
-        return runnableTask(()->{
+        return runnableTask(() -> {
             try {
                 ws.close();
-            }catch (Exception e){
-                System.out.println("Websocket is already closed");
+            } catch (Exception e) {
+                System.out.println("Tried to close already closed websocket");
             }
         }).andThen(println("Closed " + ws));
     }
 
-    public static void run(WS ws, Stream<ConsumerRecord, ProducerRecord> app) {
-        ws.open(app).andThen(Util.println("Client closed, trying to reconnect")).andThen(Task.runnableTask(()->run(ws,app)).delay(Duration.ofSeconds(5),ses)).execute();
+    public static Eventually<Unit> run(WS ws, Stream<ConsumerRecord, ProducerRecord> app) {
+       return ws.open(app)
+          .andThen(Util.println("Client closed, trying to reconnect"))
+          .andThen(Task.runnableTask(() ->
+            run(ws, app)
+          ).delay(Duration.ofSeconds(5), ses))
+          .execute();
     }
 
     public static void run(WS ws, Source<ProducerRecord> output) {
-        Client.run(ws,input -> output);
+        ws.open(input -> output).execute().await(Duration.ofSeconds(10));
     }
 
     public interface WS {
 
         Task<Unit> open(Stream<ConsumerRecord, ProducerRecord> app);
 
-        default void run(Stream<ConsumerRecord, ProducerRecord> app) {
-            Client.run(this, app);
+        default Eventually<Unit> run(Stream<ConsumerRecord, ProducerRecord> app) {
+            return Client.run(this, app);
         }
 
         default void run(Source<ProducerRecord> output) {
@@ -112,7 +117,7 @@ public class Client {
 
     public static final JsonCodec<ProducerRecord> producerRecordCodec =
       JsonCodecs.objectCodec(
-        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName->topicName.name,TopicName::new)),
+        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName -> topicName.name, TopicName::new)),
         JsonCodecs.field("msg", JsonCodecs.stringCodec),
         record -> p(record.topic, record.msg),
         ProducerRecord::new
@@ -122,7 +127,7 @@ public class Client {
       JsonCodecs.objectCodec(
         JsonCodecs.field("id", JsonCodecs.stringCodec),
         JsonCodecs.field("offset", JsonCodecs.longCodec),
-        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName->topicName.name,TopicName::new)),
+        JsonCodecs.field("topic", JsonCodecs.stringCodec.xmap(topicName -> topicName.name, TopicName::new)),
         JsonCodecs.field("msg", JsonCodecs.stringCodec),
         record -> p(record.id, record.offset, record.topic, record.msg),
         ConsumerRecord::new

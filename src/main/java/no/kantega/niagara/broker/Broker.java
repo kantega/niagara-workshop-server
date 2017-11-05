@@ -5,7 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import no.kantega.niagara.work.Util;
+import no.kantega.niagara.workshop.Util;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.kantega.kson.JsonResult;
@@ -15,15 +15,18 @@ import org.kantega.niagara.Source;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static fj.Equal.stringEqual;
 import static fj.data.List.*;
-import static no.kantega.niagara.broker.Client.producerRecordCodec;
+import static no.kantega.niagara.workshop.Client.producerRecordCodec;
 import static no.kantega.niagara.broker.ClientSubscription.firehose;
 import static no.kantega.niagara.broker.ClientSubscription.subscription;
 import static org.kantega.kson.parser.JsonParser.parse;
 
 public class Broker {
+
+    static final AtomicLong counter = new AtomicLong();
 
     public Eventually<HttpServer> start(ExecutorService executor) {
         return Eventually.callback(cb -> {
@@ -50,29 +53,30 @@ public class Broker {
                 server
                   .websocketHandler(serverWebSocket -> {
 
-                      System.out.println("Connection path: "+serverWebSocket.path()+", query: "+serverWebSocket.query());
+                      long count = counter.incrementAndGet();
+
+                      System.out.println("Connection nr " + count + ", path: " + serverWebSocket.path() + ", query: " + serverWebSocket.query());
 
                       String path =
-                        serverWebSocket.path() == null ? "":serverWebSocket.path();
+                        serverWebSocket.path() == null ? "" : serverWebSocket.path();
 
                       String query =
-                        serverWebSocket.query() == null ? "":serverWebSocket.query();
+                        serverWebSocket.query() == null ? "" : serverWebSocket.query();
 
                       List<NameValuePair> nameValuePairs =
                         iterableList(URLEncodedUtils.parse(query, Charset.forName("UTF-8")));
 
                       boolean firehose =
                         nameValuePairs
-                          .exists(np -> stringEqual.eq(np.getValue(), "firehose"));
+                          .exists(np -> stringEqual.eq(np.getName(), "/firehose"));
 
                       boolean replay =
                         nameValuePairs
-                          .exists(np -> stringEqual.eq(np.getName(), "replay") && stringEqual.eq(np.getValue(), "true"));
+                          .exists(np -> stringEqual.eq(np.getValue(), "first"));
 
                       List<String> topics =
                         nameValuePairs
-                          .filter(np -> stringEqual.eq(np.getName(), "topic"))
-                          .map(NameValuePair::getValue);
+                          .map(NameValuePair::getName);
 
 
                       if (path.startsWith("/ws")) {
@@ -88,17 +92,28 @@ public class Broker {
                           (replay ? queue.subscribe(0) : queue.subscribeToLast())
                             .to(sub)
                             .closeOn(Eventually.wrap(closer))
-                            .onClose(Util.println("Websocket closed "+serverWebSocket.query()))
+                            .onClose(Util.println("Websocket closed " + count))
                             .toTask()
                             .using(executor)
                             .execute();
 
 
                           serverWebSocket.handler(buffer -> {
-                              JsonResult<ProducerRecord> jr =
-                                parse(buffer.toString()).decode(producerRecordCodec.decoder);
+                              try {
+                                  String bufferAsString =
+                                    buffer.toString().replace("\n","\\\\n");
 
-                              queue.consume(jr.orThrow()).execute();
+                                  JsonResult<ProducerRecord> jr =
+                                    parse(bufferAsString).decode(producerRecordCodec.decoder);
+
+                                  ProducerRecord incoming =
+                                    jr.orThrow(e -> new RuntimeException(e + " Message :" + bufferAsString));
+
+                                  System.out.println("Receiveing " + incoming.topic.name + ":" + incoming.msg);
+                                  queue.consume(incoming).execute();
+                              }catch (Exception e){
+                                  System.err.println("Failed to parse incoming message "+e.getMessage());
+                              }
                           });
 
 

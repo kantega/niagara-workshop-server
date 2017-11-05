@@ -1,6 +1,6 @@
 package no.kantega.niagara.broker;
 
-import no.kantega.niagara.work.server.SessionId;
+import no.kantega.niagara.workshop.server.SessionId;
 
 public class TopicName {
     public final String name;
@@ -15,6 +15,14 @@ public class TopicName {
     }
 
     public static TopicName solution(String sessionId){
-        return new TopicName("/progress/"+sessionId);
+        return new TopicName("/solution/"+sessionId);
+    }
+
+    public static TopicName start(String sessionId){
+        return new TopicName("/start/"+sessionId);
+    }
+
+    public static TopicName echo(){
+        return new TopicName("/echo");
     }
 }

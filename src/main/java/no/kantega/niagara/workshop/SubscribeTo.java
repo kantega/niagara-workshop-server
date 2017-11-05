@@ -1,4 +1,4 @@
-package no.kantega.niagara.broker;
+package no.kantega.niagara.workshop;
 
 public class SubscribeTo {
 

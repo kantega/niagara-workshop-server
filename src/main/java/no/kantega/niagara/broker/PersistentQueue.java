@@ -13,8 +13,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class PersistentQueue implements Sink<ProducerRecord>{
+public class PersistentQueue implements Sink<ProducerRecord> {
 
     static final Path defaultLogDir =
       Paths.get(System.getProperty("user.home") + "/niagara/data").toAbsolutePath();
@@ -22,9 +23,9 @@ public class PersistentQueue implements Sink<ProducerRecord>{
     final ExecutorService executor;
 
     private final Topic<ConsumerRecord> outbound = new Topic<>();
+    private final AtomicLong            counter  = new AtomicLong();
 
-
-    final Connection   journal;
+    final Connection journal;
 
     private PersistentQueue(Path path, ExecutorService executor) {
         this.executor = executor;
@@ -45,6 +46,13 @@ public class PersistentQueue implements Sink<ProducerRecord>{
             journal
               .prepareStatement("create table if not exists journal(id varchar(255), counter bigint auto_increment, topic varchar(255), message clob)")
               .execute();
+
+            ResultSet rs =
+              journal.prepareStatement("select max(counter) as c from journal").executeQuery();
+
+            while (rs.next())
+                counter.set(rs.getLong("c"));
+
         } catch (SQLException e) {
             throw new RuntimeException("Could not create journal", e);
         }
@@ -56,15 +64,21 @@ public class PersistentQueue implements Sink<ProducerRecord>{
 
     public Task<Unit> consume(ProducerRecord producerRecord) {
         return Task.tryTask(() -> {
-            PreparedStatement ps = journal.prepareStatement("insert into journal (id,topic,message) values (?,?,?)");
-            UUID              id = UUID.randomUUID();
-            ps.setString(1, id.toString());
-            ps.setString(2, producerRecord.topic.name);
-            ps.setString(3, producerRecord.msg);
-            ps.execute();
-            return new ConsumerRecord(id.toString(), 0, producerRecord.topic, producerRecord.msg);
+            try {
+                PreparedStatement ps = journal.prepareStatement("insert into journal (id,topic,message) values (?,?,?)");
+                UUID              id = UUID.randomUUID();
+                ps.setString(1, id.toString());
+                ps.setString(2, producerRecord.topic.name);
+                ps.setString(3, producerRecord.msg);
+                ps.execute();
+
+                return new ConsumerRecord(id.toString(), counter.incrementAndGet(), producerRecord.topic, producerRecord.msg);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
         })
-          .flatMap(consumerRecord ->
+          .bind(consumerRecord ->
             outbound.publish(consumerRecord).thenJust(consumerRecord)
           ).using(executor).toUnit();
     }

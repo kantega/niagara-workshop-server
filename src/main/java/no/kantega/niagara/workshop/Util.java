@@ -1,4 +1,4 @@
-package no.kantega.niagara.work;
+package no.kantega.niagara.workshop;
 
 import fj.F;
 import fj.P;
