@@ -1,7 +1,8 @@
 module.exports = {
     config: {
         server: {
-            port: 3000
+            port: 3000,
+            hostname: "172.16.0.168"
         },
         paths: {
             watched: ["src", "spec"]
@@ -15,7 +16,7 @@ module.exports = {
                 mode: 'native'
             },
             elmBrunch: {
-                makeParameters: ['--debug'],
+                makeParameters: [],
                 mainModules: ['src/elm/Main.elm'],
                 outputFolder: "public/javascripts/",
                 outputFile: "elm.js"

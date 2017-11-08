@@ -10,7 +10,7 @@ public class RunWorkshopServer {
 
     public static void main(String[] args) {
         Client.WS ws =
-          Client.websocket("localhost", 8080, replayAndSubscribeTo("/start"), replayAndSubscribeTo("/solution"));
+          Client.websocket("172.16.0.168", 8080, replayAndSubscribeTo("/start"), replayAndSubscribeTo("/solution"));
 
         ws.run(new WsServerApp());
     }

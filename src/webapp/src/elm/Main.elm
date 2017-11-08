@@ -66,7 +66,7 @@ update msg s =
             (s,Cmd.none)
 
         SetRoute id ->
-            (s,Cmd.batch [WebSocket.send "ws://localhost:8080/ws" ("{\"topic\":\"/start/" ++ id ++ "\",\"msg\":\"start\"}"),  Navigation.modifyUrl ("#ws/" ++ id)])
+            (s,Cmd.batch [WebSocket.send "ws://172.16.0.168:8080/ws" ("{\"topic\":\"/start/" ++ id ++ "\",\"msg\":\"start\"}"),  Navigation.modifyUrl ("#ws/" ++ id)])
 
         NewMessage m ->
             case s of
@@ -95,7 +95,7 @@ subscriptions : AppState -> Sub Msg
 subscriptions s =
     case s of
         Intro -> Sub.none
-        Started (SessionId id) _ ->  WebSocket.listen ("ws://localhost:8080/ws?/progress/" ++ id ++ "=first") (msgDecoder >> parseMessage >> NewMessage)
+        Started (SessionId id) _ ->  WebSocket.listen ("ws://172.16.0.168:8080/ws?/progress/" ++ id ++ "=first") (msgDecoder >> parseMessage >> NewMessage)
 
 
 parseMessage : String -> Message
@@ -126,7 +126,11 @@ viewWelcome: Html Msg
 viewWelcome  =
     div[class "jumbotron mt-5"][
         h1 [class "display-3"][text "Welcome"]
-        , p[class "lead"] [text "Velkommen til workshom event drevet arkitektur"]
+        , p[class "lead"] [text "Velkommen til workshop event drevet arkitektur"]
+        , p[class "lead"] [
+            text "Kodeeksempler og kildekode her:"
+            , a [ href "https://github.com/kantega/niagara-workshop-server"] [ text "https://github.com/kantega/niagara-workshop-server"]]
+
         , p[class "lead"] [a [class "btn btn-primary btn-lg", href (startListenPath)] [ text "start"]]]
 
 
