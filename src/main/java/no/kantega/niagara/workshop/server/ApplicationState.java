@@ -7,7 +7,6 @@ import fj.data.TreeMap;
 import no.kantega.niagara.broker.ConsumerRecord;
 import no.kantega.niagara.broker.ProducerRecord;
 import no.kantega.niagara.broker.TopicName;
-import no.kantega.niagara.server.Route;
 import org.kantega.niagara.Mealy;
 
 import static no.kantega.niagara.workshop.server.SessionId.sessionIdOrd;

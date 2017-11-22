@@ -6,110 +6,84 @@ import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
 import fj.data.TreeMap;
-import no.kantega.niagara.broker.ConsumerRecord;
 import no.kantega.niagara.broker.ProducerRecord;
 import no.kantega.niagara.broker.TopicName;
 import no.kantega.niagara.workshop.Client;
-import no.kantega.niagara.workshop.SubscribeTo;
 import no.kantega.niagara.workshop.Util;
 import org.junit.Test;
 import org.kantega.niagara.Sources;
 import org.kantega.niagara.Stream;
 
-import java.time.Duration;
 import java.util.Arrays;
 
-import static no.kantega.niagara.broker.ProducerRecord.message;
-import static no.kantega.niagara.broker.ProducerRecord.toMessage;
-import static no.kantega.niagara.broker.TopicName.solution;
-import static no.kantega.niagara.broker.TopicName.start;
+import static no.kantega.niagara.broker.ProducerRecord.*;
+import static no.kantega.niagara.broker.TopicName.*;
 
 public class TestSolver {
 
+
+    public final String id = "jalla";
+
     public static Client.WS ws =
-      Client.websocket("172.16.0.168", 8080);
+      Client.websocket("10.80.8.187", 8080);
 
     @Test
     public void task3() {
-        ws.run(
-          Sources.emitOne(message(start("jalla"), "start"))
-        );
+        Client.run(ws, Sources.emitOne("start").map(toMessage(start(id))));
     }
 
     @Test
     public void task4() {
-        ws.run(
-          Sources.emitOne(message(solution("jalla"), "atle"))
-        );
+        Client.run(ws, id, Sources.emitOne("atle"));
     }
 
     @Test
     public void task5() {
-        ws.
-          run(
-            Sources.emitOne("atle")
-              .map(String::toUpperCase)
-              .map(toMessage(solution("jalla")))
-          );
+        Client.run(ws, id,
+          Sources.emitOne("atle")
+            .map(String::toUpperCase)
+        );
     }
 
     @Test
     public void task6() {
-        ws.run(
+        Client.run(ws, id,
           Sources.emitOne("atle")
             .map(String::toUpperCase)
             .flatten(n -> Arrays.asList(n.split("")))
-            .map(toMessage(solution("jalla")))
         );
     }
 
     @Test
     public void task7() {
-        ws.run(
+        Client.run(ws, id,
           Sources.emitOne("atle")
             .append(() -> Sources.emitOne("atle"))
             .flatten(n -> Arrays.asList(n.split("")))
-            .map(toMessage(solution("jalla")))
         );
     }
 
-    public static Client.WS ws2 =
-      Client.websocket("localhost", 8080, SubscribeTo.replayAndSubscribeTo("/echo"));
-
-
-    @Test
-    public void task8fail() {
-
-    }
 
     @Test
     public void task8() throws InterruptedException {
-        Stream<ConsumerRecord, ProducerRecord> app =
-          incoming -> incoming.map(cr -> new ProducerRecord(solution("jalla"), cr.msg));
-        ws2.run(
-          app
-        ).await(Duration.ofSeconds(5));
+        Stream<String, String> app =
+          incoming -> incoming;
+        Client.run(ws, id, "/echo", app);
     }
 
     @Test
     public void task9() throws InterruptedException {
-        Stream<ConsumerRecord, ProducerRecord> app =
-          incoming -> incoming.foldLeft("", (cum, in) -> cum + in.msg).map(m -> new ProducerRecord(solution("jalla"), m));
-        ws2.run(
-          app
-        ).await(Duration.ofSeconds(5));
+        Stream<String, String> app =
+          incoming -> incoming.foldLeft("", (cum, in) -> cum + in);
+        Client.run(ws, id, "/echo", app);
     }
-
-    public static Client.WS ws3 =
-      Client.websocket("localhost", 8080, SubscribeTo.replayAndSubscribeTo("/memberships"));
 
 
     @Test
     public void task10() throws InterruptedException {
-        Stream<ConsumerRecord, ProducerRecord> app =
+        Stream<String, String> app =
           incoming ->
             incoming
-              .map(r -> r.msg)
               .mapWithState(TreeMap.<String, Set<String>>empty(Ord.stringOrd), (members, msg) -> {
                   if (msg.startsWith("join")) {
                       String[] parts = msg.split(":");
@@ -138,12 +112,9 @@ public class TestSolver {
                   }
               })
               .mapOption(o -> o)
-              .apply(out -> Util.println(out).thenJust(out))
-              .map(ProducerRecord.toMessage(TopicName.solution("jalla")));
+              .apply(out -> Util.println(out).thenJust(out));
 
-        ws3.run(
-          app
-        ).await(Duration.ofSeconds(5));
+        Client.run(ws, id, "/memberships", app);
     }
 
 }

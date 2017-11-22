@@ -12,8 +12,8 @@ public class TestProgress {
 
     public static void main(String[] args) throws URISyntaxException {
 
-        Client.websocket("localhost", 8080, replayAndSubscribeTo("/progress/jalla"))
-          .run(input ->
+        Client.run(Client.websocket("10.80.8.187", 8080)
+          ,"/progress/jalla",input ->
             input
               .apply(consumerRecord -> Util.println(consumerRecord.toString()))
               .bind(u -> Sources.nil()));

@@ -1,4 +1,4 @@
-package no.kantega.niagara.server;
+package no.kantega.niagara.workshop.server;
 
 import fj.F;
 import fj.Ord;

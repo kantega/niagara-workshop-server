@@ -1,5 +1,6 @@
 package no.kantega.niagara.workshop.mains;
 
+import fj.data.List;
 import no.kantega.niagara.workshop.Client;
 import no.kantega.niagara.workshop.SubscribeTo;
 import no.kantega.niagara.workshop.server.WsServerApp;
@@ -10,8 +11,8 @@ public class RunWorkshopServer {
 
     public static void main(String[] args) {
         Client.WS ws =
-          Client.websocket("172.16.0.168", 8080, replayAndSubscribeTo("/start"), replayAndSubscribeTo("/solution"));
+          Client.websocket("10.80.8.187", 8080);
 
-        ws.run(new WsServerApp());
+        Client.run(ws, List.arrayList(replayAndSubscribeTo("/start"), replayAndSubscribeTo("/solution")), new WsServerApp());
     }
 }

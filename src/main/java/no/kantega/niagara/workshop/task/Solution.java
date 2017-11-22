@@ -6,35 +6,34 @@ import org.junit.Test;
 import org.kantega.niagara.Source;
 import org.kantega.niagara.Stream;
 
-public class Tasks {
+public class Solution {
 
 
     private static final String yourId =
       toDo(); //TODO  <<-- *** sett inn din id her (slik som det står på websiden) ***
 
     private static Client.WS connection =
-      Client.websocket("172.16.0.168", 8080);
+      Client.websocket("10.80.8.187", 8080);
 
 
+    //Bruk denne metoden som mal for oppgave 1 til 5.
     @Test
-    public void task1to5() {
-        //TODO
-        //Etter at dere har BYTTET UT ID OVER, så
-        //kan dere bruke "Sources" for å lage en source som emitter (=sender)
-        //team navnet
+    public void task1to4() {
+        //Bruk "Sources" for å lage en source som emitter (=sender) teamnavnet deres
         Source<String> source =
           toDo();
 
         //Kjør appen
         Client.run(
-          connection,
-          yourId,
-          source);
+          connection, //Websocket connection wrapper
+          yourId, // Team id
+          source //Sourcen deres
+        );
     }
 
+    //Bruk denne til oppgave 5 og 6.
     @Test
     public void task5to6() {
-        //TODO
         //Etter at dere har BYTTET UT ID OVER, så
         //team navnet
         Stream<String, String> stream =
@@ -51,7 +50,6 @@ public class Tasks {
 
     @Test
     public void task7() {
-        //TODO
         //Etter at dere har BYTTET UT ID OVER, så
         //team navnet
         Stream<String, String> stream =

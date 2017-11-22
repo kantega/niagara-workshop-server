@@ -37,18 +37,17 @@ public class Client {
     static ScheduledExecutorService ses =
       Executors.newSingleThreadScheduledExecutor();
 
-    public static WS websocket(String server, int port) {
+    public static WS websocket(String hostname, int port) {
 
 
-
-        return (subscribes,app) -> async(cb -> {
+        return (subscribes, app) -> async(cb -> {
             String path =
               "/ws" + toQueryString(true, subscribes);
             Topic<ConsumerRecord>          topic   = new Topic<>();
             CompletableFuture<Source.Stop> stopper = new CompletableFuture<>();
 
 
-            httpClient.websocket(port, server, path, ws -> {
+            httpClient.websocket(port, hostname, path, ws -> {
                 ws.handler(buffer ->
                   parse(buffer.toString())
                     .decode(consumerRecordCodec.decoder)
@@ -63,16 +62,16 @@ public class Client {
                   stopper.complete(Source.stop));
 
 
-                println("Opened connection to " + server + ":" + port + path)
+                println("Opened connection to " + hostname + ":" + port + path)
                   .andThen(
                     app
                       .apply(topic.subscribe())
-                      .apply(out->Util.println("Sending "+out.topic.name+":"+out.msg).thenJust(out))
+                      .apply(out -> Util.println("Sending " + out.topic.name + ":" + out.msg).thenJust(out))
                       .apply(out -> runnableTask(() -> ws.writeTextMessage(write(producerRecordCodec.encode(out)))))
                       .closeOn(Eventually.wrap(stopper))
                       .onClose(close(ws))
                       .toTask())
-                  .bind(closed -> println("Closed connection to " + server + ":" + port + path))
+                  .bind(closed -> println("Closed connection to " + hostname + ":" + port + path))
                   .bind(u -> runnableTask(() -> cb.f(Attempt.value(unit()))))
                   .execute();
             }, t ->
@@ -92,25 +91,36 @@ public class Client {
         }).andThen(println("Closed " + ws));
     }
 
-    public static Eventually<Unit> run(WS ws, String id, String subscribe, Stream<String, String> app) {
+    public static void run(WS ws, String id, String subscribe, Stream<String, String> app) {
         Stream<ConsumerRecord, ProducerRecord> wrapped =
-          incoming->incoming.map(rec->rec.msg).through(app).map(toMessage(solution(id)));
+          incoming -> incoming.map(rec -> rec.msg).through(app).map(toMessage(solution(id)));
+        run(ws, subscribe, wrapped);
+    }
 
-        return ws
-         .open(List.single(SubscribeTo.replayAndSubscribeTo(subscribe)),wrapped)
+    public static void run(WS ws, String subscribe, Stream<ConsumerRecord, ProducerRecord> app) {
+        run(ws, List.single(SubscribeTo.replayAndSubscribeTo(subscribe)), app);
+    }
+
+    public static void run(WS ws,  Stream<ConsumerRecord, ProducerRecord> app) {
+        run(ws, List.nil(), app);
+    }
+
+    public static void run(WS ws, List<SubscribeTo> subscribes, Stream<ConsumerRecord, ProducerRecord> app) {
+        ws
+          .open(subscribes, app)
           .andThen(Util.println("Client closed, trying to reconnect"))
           .andThen(Task.runnableTask(() ->
-            run(ws, id, subscribe, app)
+            run(ws, subscribes, app)
           ).delay(Duration.ofSeconds(5), ses))
-          .execute();
+          .execute().await(Duration.ofSeconds(5));
     }
 
-    public static void run(WS ws,String id, Source<String> output) {
-        run(ws,output.map(toMessage(solution(id))));
+    public static void run(WS ws, String id, Source<String> output) {
+        run(ws, output.map(toMessage(solution(id))));
     }
 
-    public static void run(WS ws,Source<ProducerRecord> output) {
-        ws.open(List.nil(),input -> output).execute().await(Duration.ofSeconds(10));
+    public static void run(WS ws, Source<ProducerRecord> output) {
+        ws.open(List.nil(), input -> output).execute().await(Duration.ofSeconds(10));
     }
 
     public interface WS {
@@ -140,9 +150,9 @@ public class Client {
     private static String toQueryString(boolean first, List<SubscribeTo> subscribeToList) {
         return
           subscribeToList.isEmpty() ? "" :
-            (first ? "?" : "&") +
-              subscribeToList.head().topic + "=" +
-              (subscribeToList.head().replay ? "first" : "last") +
-              toQueryString(false, subscribeToList.tail());
+          (first ? "?" : "&") +
+            subscribeToList.head().topic + "=" +
+            (subscribeToList.head().replay ? "first" : "last") +
+            toQueryString(false, subscribeToList.tail());
     }
 }

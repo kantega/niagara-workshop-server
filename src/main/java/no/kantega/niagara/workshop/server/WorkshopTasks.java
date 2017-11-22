@@ -17,35 +17,20 @@ public class WorkshopTasks {
 
   private static F<String, String> task1desc = id ->
     "start:Hei og velkommen til workshop om eventdreven applikasjonsutvikling.\n" +
-      "I denne workshoppen går oppgavene ut på å sende `ProducerRecord` meldinger " +
-      "(og etterhvert motta `ConsumerRecord` meldinger) til " +
-      "en meldingsbroker. En event-drevet arkitektur er ikke avhengig av bestemte meldinsestyper, " +
-      "men de aller fleste rammeverk krever en viss formening " +
-      "om topics eller keys , og man vil i praksis måtte forholde seg til dette. " +
-      "Her har vi lagt dette inn i ProducerRecord.\n" +
-      "I en event-drevet arkitektur er det stort sett en datatype man må kjenne godt til: " +
-      "En type som representere en (uendelig) strøm av data " +
-      "I denne workshoppen kan du f.eks. bruke _Niagara_ til å modellere datastrømmer og " +
-      "her kalles en slik datakilde for `Source`. Den omkapsler det faktum at man ikke vet når " +
-      "en verdi oppstår (den abstrahere vekk tidsaspektet). " +
-      "Du kan bruke rammeverket du selv vil, men det bør abstrahere vekk tid. \n" +
-      "I først oppgave skal du lage en `Source` som emitter en " +
+      "Dere kan bruke `no.kantega.niagara.workshop.task.Tasks` for å løse oppgavene. Bruk `sendOnly` for å sende meldingene dine, husk å sette inn `\"+id + \"` som id.\" \n" +
+      "I først oppgave skal du lage en `Source` som emitter (=sender) en " +
       "melding som inneholder teamets navn.\n" +
       "Navnet må være:\n" +
       " * mer enn 3 tegn\n" +
       " * under 20 tegn\n" +
-      " * inneholde små bokstaver\n\n" +
-      "Dere kan bruke `no.kantega.niagara.workshop.task.Tasks` for å løse oppgavene. Bruk `sendOnly` for å sende meldingene dine, husk å sette inn `"+id + "` som id.";
+      " * inneholde små bokstaver\n";
 
   private static String task2desc =
-    "task:Man kan endre output til en `Source` - meldig for melding -  med `map()`. " +
-      "Bruk dette til å endre datakilden din til å sende ut teamnavnet i UPPERCASE. " +
-      "Man kan også bruke `map()` for å først lage " +
-      "`Stream<String>` og så bruke `map()` til å lage `ProducerRecord` meldinger\n" +
-      "(Hint: Stream.value(nick).map(s-> ProducerRecord.message(TopicName.solution(name),s).";
+    "task:Man kan bruke `map()` til å endre output til en `Source` - meldig for melding" +
+      "Bruk dette til å endre datakilden din til å sende ut teamnavnet i UPPERCASE. ";
 
   private static String task3desc =
-    "task:Ofte har man bruk for å sende ut (emitte) flere meldinger for hver medling en source produserer. `Source` " +
+    "task:Ofte har man bruk for å sende ut flere meldinger for hver medling en source produserer. `Source` " +
       " har en metode `flatten()` som man kan " +
       " bruke for å oppnå dette. Prøv dette i praksis ved å lage en kilde med bokstaver av kilden som sender navnet.";
 
