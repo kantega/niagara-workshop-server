@@ -126,7 +126,7 @@ viewWelcome: Html Msg
 viewWelcome  =
     div[class "jumbotron mt-5"][
         h1 [class "display-3"][text "Welcome"]
-        , p[class "lead"] [text "Velkommen til workshop event drevet arkitektur"]
+        , p[class "lead"] [text "Velkommen til workshop i/om eventdrevet arkitektur"]
         , p[class "lead"] [
             text "Kodeeksempler og kildekode her:"
             , a [ href "https://github.com/kantega/niagara-workshop-server"] [ text "https://github.com/kantega/niagara-workshop-server"]]

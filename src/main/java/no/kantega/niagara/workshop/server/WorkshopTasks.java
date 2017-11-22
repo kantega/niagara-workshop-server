@@ -17,7 +17,7 @@ public class WorkshopTasks {
 
   private static F<String, String> task1desc = id ->
     "start:Hei og velkommen til workshop om eventdreven applikasjonsutvikling.\n" +
-      "Dere kan bruke `no.kantega.niagara.workshop.task.Tasks` for å løse oppgavene. Bruk `sendOnly` for å sende meldingene dine, husk å sette inn `\"+id + \"` som id.\" \n" +
+      "Dere kan bruke `no.kantega.niagara.workshop.task.Solution` for å løse oppgavene. Husk å sette inn gruppens id: `"+id + "` \n" +
       "I først oppgave skal du lage en `Source` som emitter (=sender) en " +
       "melding som inneholder teamets navn.\n" +
       "Navnet må være:\n" +
