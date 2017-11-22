@@ -19,7 +19,7 @@ public class WorkshopTasks {
     "start:Hei og velkommen til workshop om eventdreven applikasjonsutvikling.\n" +
       "I denne workshoppen går oppgavene ut på å sende `ProducerRecord` meldinger " +
       "(og etterhvert motta `ConsumerRecord` meldinger) til " +
-      "en meldingsbroker. En event-drevet arkitektur er ikke avhengig av bestemte meldignestyper, " +
+      "en meldingsbroker. En event-drevet arkitektur er ikke avhengig av bestemte meldinsestyper, " +
       "men de aller fleste rammeverk krever en viss formening " +
       "om topics eller keys , og man vil i praksis måtte forholde seg til dette. " +
       "Her har vi lagt dette inn i ProducerRecord.\n" +
@@ -35,11 +35,10 @@ public class WorkshopTasks {
       " * mer enn 3 tegn\n" +
       " * under 20 tegn\n" +
       " * inneholde små bokstaver\n\n" +
-      "Send meldingen ved å bruke `Ws ws = Client.websocket(172.16.0.168, 8080, [SubscribeTo.replayAndSubscribeTo(/memberships)])` og så `ws.run()` eller å sende meldingen direkte til " +
-      "ws://172.16.0.168:8080/ws/ med formatet {topic:/solution/" + id + ", msg: _mld_ }";
+      "Dere kan bruke `no.kantega.niagara.workshop.task.Tasks` for å løse oppgavene. Bruk `sendOnly` for å sende meldingene dine, husk å sette inn `"+id + "` som id.";
 
   private static String task2desc =
-    "task:Man kan endre output til en `Source` meldig for melding med `map()`. " +
+    "task:Man kan endre output til en `Source` - meldig for melding -  med `map()`. " +
       "Bruk dette til å endre datakilden din til å sende ut teamnavnet i UPPERCASE. " +
       "Man kan også bruke `map()` for å først lage " +
       "`Stream<String>` og så bruke `map()` til å lage `ProducerRecord` meldinger\n" +
@@ -152,7 +151,7 @@ public class WorkshopTasks {
             .then(awaitLettersIn(nickMsg.message.toUpperCase()))
             .then(emit(randSucc()))
             .then(emit(task4desc))
-            .then(awaitLettersIn(nickMsg.message).then(awaitLettersIn(nickMsg.message)))
+            .then(awaitLettersIn(nickMsg.message.toUpperCase()).repeat(2))
             .then(emit(randSucc()))
             .then(emit(task5desc))
             .then(awaitMessagesReset(echoStrings))

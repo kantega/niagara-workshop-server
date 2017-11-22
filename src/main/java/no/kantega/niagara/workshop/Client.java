@@ -20,6 +20,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static fj.P.p;
 import static fj.Unit.*;
+import static no.kantega.niagara.broker.ProducerRecord.*;
+import static no.kantega.niagara.broker.TopicName.*;
 import static no.kantega.niagara.workshop.Util.*;
 import static org.kantega.kson.parser.JsonParser.parse;
 import static org.kantega.kson.parser.JsonWriter.*;
@@ -35,12 +37,13 @@ public class Client {
     static ScheduledExecutorService ses =
       Executors.newSingleThreadScheduledExecutor();
 
-    public static WS websocket(String server, int port, SubscribeTo... subscribeTos) {
+    public static WS websocket(String server, int port) {
 
-        String path =
-          "/ws" + toQueryString(true, List.arrayList(subscribeTos));
 
-        return app -> async(cb -> {
+
+        return (subscribes,app) -> async(cb -> {
+            String path =
+              "/ws" + toQueryString(true, subscribes);
             Topic<ConsumerRecord>          topic   = new Topic<>();
             CompletableFuture<Source.Stop> stopper = new CompletableFuture<>();
 
@@ -89,30 +92,31 @@ public class Client {
         }).andThen(println("Closed " + ws));
     }
 
-    public static Eventually<Unit> run(WS ws, Stream<ConsumerRecord, ProducerRecord> app) {
-       return ws.open(app)
+    public static Eventually<Unit> run(WS ws, String id, String subscribe, Stream<String, String> app) {
+        Stream<ConsumerRecord, ProducerRecord> wrapped =
+          incoming->incoming.map(rec->rec.msg).through(app).map(toMessage(solution(id)));
+
+        return ws
+         .open(List.single(SubscribeTo.replayAndSubscribeTo(subscribe)),wrapped)
           .andThen(Util.println("Client closed, trying to reconnect"))
           .andThen(Task.runnableTask(() ->
-            run(ws, app)
+            run(ws, id, subscribe, app)
           ).delay(Duration.ofSeconds(5), ses))
           .execute();
     }
 
-    public static void run(WS ws, Source<ProducerRecord> output) {
-        ws.open(input -> output).execute().await(Duration.ofSeconds(10));
+    public static void run(WS ws,String id, Source<String> output) {
+        run(ws,output.map(toMessage(solution(id))));
+    }
+
+    public static void run(WS ws,Source<ProducerRecord> output) {
+        ws.open(List.nil(),input -> output).execute().await(Duration.ofSeconds(10));
     }
 
     public interface WS {
 
-        Task<Unit> open(Stream<ConsumerRecord, ProducerRecord> app);
+        Task<Unit> open(List<SubscribeTo> subscribeToList, Stream<ConsumerRecord, ProducerRecord> app);
 
-        default Eventually<Unit> run(Stream<ConsumerRecord, ProducerRecord> app) {
-            return Client.run(this, app);
-        }
-
-        default void run(Source<ProducerRecord> output) {
-            Client.run(this, output);
-        }
     }
 
     public static final JsonCodec<ProducerRecord> producerRecordCodec =

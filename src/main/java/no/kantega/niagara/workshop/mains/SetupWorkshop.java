@@ -51,7 +51,7 @@ public class SetupWorkshop {
     Client.WS ws =
       Client.websocket("172.16.0.168", 8080);
 
-    ws.run(Sources
+    Client.run(ws,Sources
       .fromIterable(WorkshopTasks.echoStrings)
       .map(ProducerRecord.toMessage(TopicName.echo()))
       .append(() ->
