@@ -70,7 +70,7 @@ public class WorkshopTasks {
       "Meldingene har følgende format:\n" +
       "`join:[brukerid]:[gruppeId]`\n" +
       "`leave:[brukerId]:[gruppeId]`\n" +
-      "`create:[gruppeId]`\n" +
+      "`create:[brukerId]:[gruppeId]`\n" +
       "`message:[userId]:[groupId]:[text]` - der `text` kan inneholde en _mention_, i dette tilfellet @[brukerId]\n" +
       "\n" +
       "Dere skal lage en applikasjon som sender et varsel til en bruker når han blir _mentioned_ i en " +

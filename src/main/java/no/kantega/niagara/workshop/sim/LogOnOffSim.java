@@ -158,7 +158,7 @@ public class LogOnOffSim {
 
     return
       always(p(
-        new LogOnOffSim(persons, groups, memberships, onlineUsers.insert(person), offlineMentions.delete(person)),
+        new LogOnOffSim(persons, groups, memberships, onlineUsers.delete(person), offlineMentions.delete(person)),
         list(new Logoff(person))
       ));
   }
