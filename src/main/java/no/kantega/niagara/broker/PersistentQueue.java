@@ -2,9 +2,9 @@ package no.kantega.niagara.broker;
 
 import fj.Unit;
 import fj.data.List;
-import org.kantega.niagara.*;
-import org.kantega.niagara.exchange.AsyncDroppingInputQueue;
-import org.kantega.niagara.exchange.Topic;
+import no.kantega.niagara.exchange.AsyncDroppingInputQueue;
+import no.kantega.niagara.exchange.Topic;
+import no.kantega.niagara.stream.*;
 
 import java.io.File;
 import java.nio.file.Path;

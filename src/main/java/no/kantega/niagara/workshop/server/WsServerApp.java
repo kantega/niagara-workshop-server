@@ -2,11 +2,9 @@ package no.kantega.niagara.workshop.server;
 
 import no.kantega.niagara.broker.ConsumerRecord;
 import no.kantega.niagara.broker.ProducerRecord;
-import no.kantega.niagara.broker.TopicName;
+import no.kantega.niagara.stream.Source;
+import no.kantega.niagara.stream.Stream;
 import no.kantega.niagara.workshop.Util;
-import org.kantega.niagara.Source;
-import org.kantega.niagara.Sources;
-import org.kantega.niagara.Stream;
 
 import static no.kantega.niagara.workshop.Util.println;
 

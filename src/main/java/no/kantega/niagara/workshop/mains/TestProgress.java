@@ -1,12 +1,10 @@
 package no.kantega.niagara.workshop.mains;
 
+import no.kantega.niagara.stream.Sources;
 import no.kantega.niagara.workshop.Client;
 import no.kantega.niagara.workshop.Util;
-import org.kantega.niagara.Sources;
 
 import java.net.URISyntaxException;
-
-import static no.kantega.niagara.workshop.SubscribeTo.*;
 
 public class TestProgress {
 

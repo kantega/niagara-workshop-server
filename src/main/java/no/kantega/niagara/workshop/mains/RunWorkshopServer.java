@@ -11,7 +11,7 @@ public class RunWorkshopServer {
 
     public static void main(String[] args) {
         Client.WS ws =
-          Client.websocket("10.80.8.187", 8080);
+          Client.websocket(Settings.brokerIp, Settings.brukerPort);
 
         Client.run(ws, List.arrayList(replayAndSubscribeTo("/start"), replayAndSubscribeTo("/solution")), new WsServerApp());
     }

@@ -6,13 +6,11 @@ import fj.data.List;
 import fj.data.Option;
 import fj.data.Set;
 import fj.data.TreeMap;
-import no.kantega.niagara.broker.ProducerRecord;
-import no.kantega.niagara.broker.TopicName;
+import no.kantega.niagara.stream.Sources;
+import no.kantega.niagara.stream.Stream;
 import no.kantega.niagara.workshop.Client;
 import no.kantega.niagara.workshop.Util;
 import org.junit.Test;
-import org.kantega.niagara.Sources;
-import org.kantega.niagara.Stream;
 
 import java.util.Arrays;
 

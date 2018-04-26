@@ -1,10 +1,10 @@
 package no.kantega.niagara.workshop.task;
 
 import fj.Bottom;
+import no.kantega.niagara.stream.Source;
+import no.kantega.niagara.stream.Stream;
 import no.kantega.niagara.workshop.Client;
 import org.junit.Test;
-import org.kantega.niagara.Source;
-import org.kantega.niagara.Stream;
 
 public class Solution {
 

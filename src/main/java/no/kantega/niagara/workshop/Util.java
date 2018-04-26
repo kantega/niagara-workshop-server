@@ -6,7 +6,7 @@ import fj.P2;
 import fj.Unit;
 import fj.data.List;
 import fj.data.Option;
-import org.kantega.niagara.Task;
+import no.kantega.niagara.stream.Task;
 
 public class Util {
 

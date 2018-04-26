@@ -2,7 +2,7 @@ module.exports = {
     config: {
         server: {
             port: 3000,
-            hostname: "10.80.8.187"
+            hostname: "158.37.74.136"
         },
         paths: {
             watched: ["src", "spec"]

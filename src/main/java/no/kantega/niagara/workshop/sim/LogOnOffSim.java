@@ -1,27 +1,21 @@
 package no.kantega.niagara.workshop.sim;
 
-import fj.P;
 import fj.P2;
-import fj.data.List;
-import fj.data.Seq;
-import fj.data.Set;
-import fj.data.Stream;
+import fj.data.*;
+import no.kantega.niagara.stream.Sources;
+import no.kantega.niagara.workshop.Util;
 
 import java.util.Random;
-
-import fj.data.TreeMap;
-import no.kantega.niagara.workshop.Util;
-import org.kantega.niagara.Sources;
-
 import java.util.concurrent.atomic.AtomicLong;
 
-import static fj.P.*;
+import static fj.P.p;
 import static fj.data.List.*;
-import static fj.data.TreeMap.*;
+import static fj.data.TreeMap.empty;
+import static fj.data.TreeMap.treeMap;
 import static no.kantega.niagara.workshop.sim.Generator.*;
 import static no.kantega.niagara.workshop.sim.Sim.*;
 import static no.kantega.niagara.workshop.sim.SimOutput.*;
-import static no.kantega.niagara.workshop.sim.SimOutput.Post.*;
+import static no.kantega.niagara.workshop.sim.SimOutput.Post.post;
 
 public class LogOnOffSim {
 

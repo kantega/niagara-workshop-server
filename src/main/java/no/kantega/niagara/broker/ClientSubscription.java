@@ -1,15 +1,13 @@
 package no.kantega.niagara.broker;
 
 import fj.F;
-import fj.Ord;
 import fj.Unit;
 import fj.data.List;
-import fj.data.Set;
 import io.vertx.core.http.ServerWebSocket;
+import no.kantega.niagara.stream.Sink;
+import no.kantega.niagara.stream.Task;
 import no.kantega.niagara.workshop.Client;
 import org.kantega.kson.parser.JsonWriter;
-import org.kantega.niagara.Sink;
-import org.kantega.niagara.Task;
 
 public class ClientSubscription implements Sink<ConsumerRecord> {
 

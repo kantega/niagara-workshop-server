@@ -3,13 +3,13 @@ package no.kantega.niagara.workshop.mains;
 import fj.data.*;
 import no.kantega.niagara.broker.ProducerRecord;
 import no.kantega.niagara.broker.TopicName;
+import no.kantega.niagara.stream.Sources;
 import no.kantega.niagara.workshop.Client;
 import no.kantega.niagara.workshop.server.Progress;
 import no.kantega.niagara.workshop.sim.LogOnOffSim;
 import no.kantega.niagara.workshop.sim.MembershipSim;
 import no.kantega.niagara.workshop.server.WorkshopTasks;
 import no.kantega.niagara.workshop.sim.SimOutput;
-import org.kantega.niagara.Sources;
 
 import java.time.Duration;
 import java.util.Random;

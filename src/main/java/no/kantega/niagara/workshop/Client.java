@@ -8,10 +8,10 @@ import io.vertx.core.http.WebSocket;
 import no.kantega.niagara.broker.ConsumerRecord;
 import no.kantega.niagara.broker.ProducerRecord;
 import no.kantega.niagara.broker.TopicName;
+import no.kantega.niagara.exchange.Topic;
+import no.kantega.niagara.stream.*;
 import org.kantega.kson.codec.JsonCodec;
 import org.kantega.kson.codec.JsonCodecs;
-import org.kantega.niagara.*;
-import org.kantega.niagara.exchange.Topic;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +22,10 @@ import static fj.P.p;
 import static fj.Unit.*;
 import static no.kantega.niagara.broker.ProducerRecord.*;
 import static no.kantega.niagara.broker.TopicName.*;
+import static no.kantega.niagara.stream.Task.*;
 import static no.kantega.niagara.workshop.Util.*;
 import static org.kantega.kson.parser.JsonParser.parse;
 import static org.kantega.kson.parser.JsonWriter.*;
-import static org.kantega.niagara.Task.*;
 
 public class Client {
 
@@ -109,7 +109,7 @@ public class Client {
         ws
           .open(subscribes, app)
           .andThen(Util.println("Client closed, trying to reconnect"))
-          .andThen(Task.runnableTask(() ->
+          .andThen(runnableTask(() ->
             run(ws, subscribes, app)
           ).delay(Duration.ofSeconds(5), ses))
           .execute().await(Duration.ofSeconds(5));

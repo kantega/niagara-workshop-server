@@ -7,7 +7,7 @@ import fj.data.TreeMap;
 import no.kantega.niagara.broker.ConsumerRecord;
 import no.kantega.niagara.broker.ProducerRecord;
 import no.kantega.niagara.broker.TopicName;
-import org.kantega.niagara.Mealy;
+import no.kantega.niagara.stream.Mealy;
 
 import static no.kantega.niagara.workshop.server.SessionId.sessionIdOrd;
 
@@ -33,7 +33,7 @@ public class ApplicationState implements Mealy<ConsumerRecord, List<ProducerReco
     }
 
     @Override
-    public Transition<ConsumerRecord, List<ProducerRecord>> apply(ConsumerRecord producerRecord) {
+    public Mealy.Transition<ConsumerRecord, List<ProducerRecord>> apply(ConsumerRecord producerRecord) {
         TopicName topicName = producerRecord.topic;
 
         return
