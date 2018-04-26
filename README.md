@@ -7,4 +7,4 @@
  1. Endre no.kantega.niagara.workshop.task.Solution bed å skrive in adressen til broker og id til sesjonen.
 
  1. Bruk deretter no.kantega.niagara.workshop.task.Solution i prosjektet for å løse oppgavene. Den kjøres med junit.
-Oppgavene er laget slik at man stort sett kan bygge videre på forrige løsning, men ikke nødvendigivis. Hold øyne åpne.
+Oppgavene er laget slik at man stort sett kan bygge videre på forrige løsning, men ikke nødvendigvis. Hold øyne åpne.
