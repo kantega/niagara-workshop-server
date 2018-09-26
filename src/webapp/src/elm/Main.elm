@@ -25,6 +25,7 @@ main =
 
 -- MODEL
 
+host = "ws://158.37.74.136:8080"
 
 type AppState
     = Intro
@@ -66,7 +67,7 @@ update msg s =
             (s,Cmd.none)
 
         SetRoute id ->
-            (s,Cmd.batch [WebSocket.send "ws://158.37.74.136:8080/ws" ("{\"topic\":\"/start/" ++ id ++ "\",\"msg\":\"start\"}"),  Navigation.modifyUrl ("#ws/" ++ id)])
+            (s,Cmd.batch [WebSocket.send (host ++ "/ws") ("{\"topic\":\"/start/" ++ id ++ "\",\"msg\":\"start\"}"),  Navigation.modifyUrl ("#ws/" ++ id)])
 
         NewMessage m ->
             case s of
@@ -95,7 +96,7 @@ subscriptions : AppState -> Sub Msg
 subscriptions s =
     case s of
         Intro -> Sub.none
-        Started (SessionId id) _ ->  WebSocket.listen ("ws://158.37.74.136:8080/ws?/progress/" ++ id ++ "=first") (msgDecoder >> parseMessage >> NewMessage)
+        Started (SessionId id) _ ->  WebSocket.listen (host ++ "/ws?/progress/" ++ id ++ "=first") (msgDecoder >> parseMessage >> NewMessage)
 
 
 parseMessage : String -> Message

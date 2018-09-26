@@ -8,13 +8,14 @@ import java.net.URISyntaxException;
 
 public class TestProgress {
 
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) throws URISyntaxException, InterruptedException {
 
-        Client.run(Client.websocket("10.80.8.187", 8080)
+        Client.run(Client.websocket(Settings.brokerIp, Settings.brukerPort)
           ,"/progress/jalla",input ->
             input
               .apply(consumerRecord -> Util.println(consumerRecord.toString()))
               .bind(u -> Sources.nil()));
+        Thread.sleep(1000);
 
 
     }

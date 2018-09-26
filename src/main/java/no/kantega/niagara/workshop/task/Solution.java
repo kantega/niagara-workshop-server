@@ -13,7 +13,7 @@ public class Solution {
       toDo(); //TODO  <<-- *** sett inn din id her (slik som det står på websiden) ***
 
     private static Client.WS connection =
-      Client.websocket("10.80.8.187", 8080);
+      Client.websocket("172.16.0.223", 8080);
 
 
     //Bruk denne metoden som mal for oppgave 1 til 5.

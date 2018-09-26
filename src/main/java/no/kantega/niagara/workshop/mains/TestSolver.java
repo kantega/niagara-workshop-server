@@ -23,7 +23,7 @@ public class TestSolver {
     public final String id = "jalla";
 
     public static Client.WS ws =
-      Client.websocket("10.80.8.187", 8080);
+      Client.websocket(Settings.brokerIp, Settings.brukerPort);
 
     @Test
     public void task3() {
