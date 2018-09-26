@@ -49,7 +49,7 @@ public class SetupWorkshop {
 
   public static void main(String[] args) {
     Client.WS ws =
-      Client.websocket("10.80.8.187", 8080);
+      Client.websocket(Settings.brokerIp, 8080);
 
     Client.run(ws,Sources
       .fromIterable(WorkshopTasks.echoStrings)

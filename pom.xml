@@ -11,17 +11,9 @@
         <repository>
             <id>nexus</id>
             <name>Kantega Maven Repository</name>
-            <url>http://nexus.kantega.org/content/groups/public/</url>
+            <url>https://opensource.kantega.no/nexus</url>
             <snapshots>
                 <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>snapshots</id>
-            <name>Kantega Snapshots</name>
-            <url>http://nexus.kantega.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
@@ -37,9 +29,9 @@
             <version>1.4.196</version>
         </dependency>
         <dependency>
-            <groupId>org.kantega.kson</groupId>
-            <artifactId>kson</artifactId>
-            <version>2.13-SNAPSHOT</version>
+            <groupId>org.functionaljava</groupId>
+            <artifactId>functionaljava</artifactId>
+            <version>4.7</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

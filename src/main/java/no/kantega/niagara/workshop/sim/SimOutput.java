@@ -1,14 +1,12 @@
 package no.kantega.niagara.workshop.sim;
 
-import fj.Equal;
 import fj.P2;
 import fj.data.List;
 import fj.data.Option;
 import fj.data.TreeMap;
 import no.kantega.niagara.workshop.server.Progress;
 
-
-import static fj.Equal.*;
+import static fj.Equal.stringEqual;
 
 public interface SimOutput {
 
