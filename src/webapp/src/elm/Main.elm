@@ -25,7 +25,7 @@ main =
 
 -- MODEL
 
-host = "ws://158.37.74.136:8080"
+host = "ws://172.16.4.161:8080"
 
 type AppState
     = Intro
