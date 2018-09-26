@@ -2,7 +2,7 @@
 
  1. Klone dette prosjektet
 
- 1. Gå inn på websiden (http://172.16.0.223:3000/) som er satt opp, og start en sesjon.
+ 1. Gå inn på websiden (http://172.16.4.161:3000/) som er satt opp, og start en sesjon.
  
  1. Endre no.kantega.niagara.workshop.task.Solution ved å skrive in adressen til broker og id til sesjonen.
 
